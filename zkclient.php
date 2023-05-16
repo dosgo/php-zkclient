@@ -7,8 +7,7 @@ class zkClient{
     var $protocolVersion=0;
     var $lastZxid=0;
     //header
-    var $Xid=0; //    int32
-	var $Opcode=0;// int32
+    var $xid=0; //    int32
     var $passWord="";
     var $st=false;
     var $sessionTimeoutMs=1000;//
@@ -96,8 +95,8 @@ class zkClient{
 			Watch bool
 		}*/
         $packet = new zkPacket();
-        $this->Xid++;
-        $packet->WriteBegin($this->Xid,opGetData);
+        $this->xid++;
+        $packet->WriteBegin($this->xid,opGetData);
         $packet->WriteString($path);
         $packet->WriteByte(0);
         //send
@@ -111,7 +110,7 @@ class zkClient{
 			if($resHeader['err']!=0){
 				return false;
 			}else{
-				if($resHeader['xid']==$this->Xid){
+				if($resHeader['xid']==$this->xid){
 					/*
 					type getDataResponse struct {
 						Data []byte
@@ -142,8 +141,8 @@ class zkClient{
 		}
 		
 		$packet = new zkPacket();
-        $this->Xid++;
-        $packet->WriteBegin($this->Xid,opCreate);
+        $this->xid++;
+        $packet->WriteBegin($this->xid,opCreate);
 		/*
 		type CreateRequest struct {
 			Path  string
@@ -174,7 +173,7 @@ class zkClient{
 				$this->errMsg="error";
 				return false;
 			}else{
-				if($resHeader['xid']==$this->Xid){
+				if($resHeader['xid']==$this->xid){
 					/*
 					type createResponse struct {
 						Path string
@@ -197,8 +196,8 @@ class zkClient{
 			return false;
 		}
 		$packet = new zkPacket();
-        $this->Xid++;
-        $packet->WriteBegin($this->Xid,opSetData);
+        $this->xid++;
+        $packet->WriteBegin($this->xid,opSetData);
 		/*
 		type SetDataRequest struct {
 			Path    string
@@ -221,7 +220,7 @@ class zkClient{
 				$this->errMsg="error";
 				return false;
 			}else{
-				if($resHeader['xid']==$this->Xid){
+				if($resHeader['xid']==$this->xid){
 					/*
 					type setDataResponse  struct {
 						Stat Stat
@@ -244,8 +243,8 @@ class zkClient{
 			Watch bool
 		}*/
         $packet = new zkPacket();
-        $this->Xid++;
-        $packet->WriteBegin($this->Xid,opExists);
+        $this->xid++;
+        $packet->WriteBegin($this->xid,opExists);
         $packet->WriteString($path);
         $packet->WriteByte(0);
 		//send
@@ -260,7 +259,7 @@ class zkClient{
 				$this->errMsg="error";
 				return false;
 			}else{
-				if($resHeader['xid']==$this->Xid){
+				if($resHeader['xid']==$this->xid){
 					/*
 					type statResponse   struct {
 						Stat Stat

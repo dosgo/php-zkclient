@@ -20,9 +20,10 @@ class zkClient{
 	var $errMsg='';
 	var $isConnect=false;
 
-	public function __construct($addr,$port=2181){
+	public function __construct($addr,$port=2181,$passWord=''){
 		$this->addr=$addr;
 		$this->port=$port;
+		$this->passWord=$passWord;
 	}
 
     function connect(){

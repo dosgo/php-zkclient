@@ -76,7 +76,7 @@ class zkPacket {
 		}*/
 		$xid =$this->ReadInt();
 		$zxid =$this->ReadInt64();
-		$err =$this->ReadInt();
+		$err =$this->ReadErrCode();
 		return ['xid'=>$xid,'zxid'=>$zxid,'err'=>$err];
 	}
 
@@ -91,6 +91,14 @@ class zkPacket {
 		$this->m_packetBuffer = substr($this->m_packetBuffer, 4);
 		return $value[1];
 	}
+
+	public function ReadErrCode(){
+		$temp = substr($this->m_packetBuffer, 0, 4);
+		$value = unpack("s", $temp);
+		$this->m_packetBuffer = substr($this->m_packetBuffer, 4);
+		return $value[1];
+	}
+
 
 	public function ReadInt64(){
 		$high = self::ReadInt();

@@ -22,3 +22,10 @@
 	const	opError           = -1;
 		// Not in protocol, used internally
 	const	opWatcherEvent = -2;
+
+	const  PERM_READ = 1;
+	const  PERM_WRITE = 2;
+	const  PERM_CREATE = 4;
+	const  PERM_DELETE = 8;
+	const  PERM_ADMIN = 16;
+	const  PERM_ALL = 31;

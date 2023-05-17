@@ -102,29 +102,24 @@ class zkClient{
         //send
 		$flag=$this->sendPack($packet);
         if($flag>0){
-			$recvPacket = $this->recvPack();
-			$resHeader=$recvPacket->ParsePacket();
-			if ($resHeader['zxid'] > 0) {
-				$this->lastZxid = $resHeader['zxid'];
-			}
-			if($resHeader['err']!=0){
+			$recvInfo = $this->recvPackByXid($this->xid);
+			if(!$recvInfo||$recvInfo['err']!=0){
+				$this->errMsg="error!";
+				$this->err=$recvInfo['err'];
 				return false;
-			}else{
-				if($resHeader['xid']==$this->xid){
-					/*
-					type getDataResponse struct {
-						Data []byte
-						Stat Stat
-					}*/
-					return $recvPacket->ReadString();
-				}
 			}
+			/*
+			type getDataResponse struct {
+				Data []byte
+				Stat Stat
+			}*/
+			return $recvInfo['recvPacket']->ReadString();
         }
         return false;
     }
 
 	/*create */
-	public function create($path,$data,$flags=0,$acl=array(['perms'=>0x1f, 'scheme'=>"world", 'id'=>"anyone"])){
+	public function create($path,$data,$acl=array(['perms'=>PERM_ALL, 'scheme'=>"world", 'id'=>"anyone"]),$flags=0){
         if(!$path){
 			$this->errMsg='path cannot be empty';
 			return false;
@@ -164,29 +159,23 @@ class zkClient{
          //send
 		$flag=$this->sendPack($packet);
         if($flag>0){
-			$recvPacket = $this->recvPack();
-			$resHeader=$recvPacket->ParsePacket();
-			if ($resHeader['zxid'] > 0) {
-				$this->lastZxid = $resHeader['zxid'];
-			}
-			if($resHeader['err']!=0){
-				$this->errMsg="error";
+			$recvInfo = $this->recvPackByXid($this->xid);
+			if(!$recvInfo||$recvInfo['err']!=0){
+				$this->errMsg="error!";
+				$this->err=$recvInfo['err'];
 				return false;
-			}else{
-				if($resHeader['xid']==$this->xid){
-					/*
-					type createResponse struct {
-						Path string
-					}*/
-					return $recvPacket->ReadString();
-				}
 			}
+			/*
+			type createResponse struct {
+				Path string
+			}*/
+			return $recvInfo['recvPacket']->ReadString();
         }
         return false;
     }
 
 
-	public function set($path,$data,$version=0){
+	public function set($path,$data,$version=-1){
         if(!$path){
 			$this->errMsg='path cannot be empty';
 			return false;
@@ -211,23 +200,17 @@ class zkClient{
         //send
 		$flag=$this->sendPack($packet);
         if($flag>0){
-			$recvPacket = $this->recvPack();
-			$resHeader=$recvPacket->ParsePacket();
-			if ($resHeader['zxid'] > 0) {
-				$this->lastZxid = $resHeader['zxid'];
-			}
-			if($resHeader['err']!=0){
-				$this->errMsg="error";
+			$recvInfo = $this->recvPackByXid($this->xid);
+			if(!$recvInfo||$recvInfo['err']!=0){
+				$this->errMsg="error!";
+				$this->err=$recvInfo['err'];
 				return false;
-			}else{
-				if($resHeader['xid']==$this->xid){
-					/*
-					type setDataResponse  struct {
-						Stat Stat
-					}*/
-					return true;
-				}
 			}
+			/*
+			type setDataResponse  struct {
+				Stat Stat
+			}*/
+			return true;
         }
         return false;
     }
@@ -250,23 +233,17 @@ class zkClient{
 		//send
 		$flag=$this->sendPack($packet);
         if($flag>0){
-			$recvPacket = $this->recvPack();
-			$resHeader=$recvPacket->ParsePacket();
-			if ($resHeader['zxid'] > 0) {
-				$this->lastZxid =$resHeader['zxid'];
-			}
-			if($resHeader['err']!=0){
-				$this->errMsg="error";
+			$recvInfo = $this->recvPackByXid($this->xid);
+			if(!$recvInfo||$recvInfo['err']!=0){
+				$this->errMsg="error!";
+				$this->err=$recvInfo['err'];
 				return false;
-			}else{
-				if($resHeader['xid']==$this->xid){
-					/*
-					type statResponse   struct {
-						Stat Stat
-					}*/
-					return true;
-				}
 			}
+			/*
+			type statResponse   struct {
+				Stat Stat
+			}*/
+			return true;
         }
         return false;
     }
@@ -279,6 +256,26 @@ class zkClient{
 		$recvPacket = new zkPacket();
 		$recvPacket->SetRecvPacketBuffer($buf,intval($len[1]));
 		return $recvPacket;
+	}
+
+	/*recv back by xid*/
+	private function recvPackByXid($xid,$retry=3){
+		$i=0;
+		while(true){
+			$recvPacket=$this->recvPack();
+			$resHeader=$recvPacket->ParsePacket();
+			if ($resHeader['zxid'] > 0) {
+				$this->lastZxid =$resHeader['zxid'];
+			}
+			if($resHeader['xid']==$xid){
+				return ['err'=>$resHeader['err'],'recvPacket'=>$recvPacket];
+			}
+			$i++;
+			if($i>$retry){
+				break;
+			}
+		}
+		return false;
 	}
 
 	/*send pack*/
@@ -295,8 +292,3 @@ class zkClient{
 		return socket_write($this->st, $request,$size);
 	}
 }
-
-
-
-
-
